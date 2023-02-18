@@ -1,3 +1,4 @@
+import Algorithms.BellmanFord;
 import Algorithms.Dijkstra;
 
 import Graph.DirectedGraph;
@@ -7,7 +8,7 @@ import Graph.UndirectedGraph;
 public class Main {
 
     public static void main(String[] args) {
-        GraphInterface<Character> graph = new UndirectedGraph<>();
+        DirectedGraph<Character> graph = new DirectedGraph<>();
 
         graph.addVertex('A');
         graph.addVertex('B');
@@ -19,13 +20,24 @@ public class Main {
         graph.addVertex('H');
 
 
-        graph.addEdge('D', 'A');
+        graph.addEdge('A', 'B', 10);
+        graph.addEdge('A', 'G', 2);
 
+        graph.addEdge('C', 'B',-10);
 
+        graph.addEdge('E', 'D',2);
 
-        Dijkstra solveD = new Dijkstra(graph);
+        graph.addEdge('F', 'E',3);
 
-        System.out.println(solveD.shortestPath('D', 'A'));
+        graph.addEdge('G', 'H',1);
+        graph.addEdge('G', 'C',11);
+        graph.addEdge('G', 'F',6);
+        
+
+        BellmanFord solve = new BellmanFord(graph);
+        System.out.println(solve.shortestPath('A', 'D'));
+        System.out.println(solve.shortestPathCost('A', 'D'));
+
 
         System.out.println(graph);
     }

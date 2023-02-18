@@ -72,7 +72,7 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
      * @param b the other vertex
      * @param weight    the desired weight
      * @return  true only when the vertex was successfully added
-    */
+     */
     public boolean addEdge(Vertex<T> a, Vertex<T> b, int weight){
         if(!ensureUniqueEdge(a.data, b.getData())) throw new IllegalArgumentException("The edge you are attempting to create already exists");
         edgeLinkedList.add(new Edge<>(a,b, weight));
@@ -226,7 +226,6 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
         }
 
 
-        //TODO : This method will now be able to take the edge and the vertex
         /**
          * Sets the distance to this vertex and also what vertex was used to get to this vertex
          * @param distance  the distance
@@ -303,15 +302,6 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
         private EDGESTATE state;
 
         /**
-         * Creates an edge with default weight of 1
-         * @param a  the data and or label of the desired vertex
-         * @param b    the data and or label of the desired vertex
-         */
-        public Edge(Vertex<T> a, Vertex<T> b){
-            this(a, b, 1);
-        }
-
-        /**
          * Creates an Edge with specified weight
          * @param a  the data and or label of the desired vertex
          * @param b    the data and or label fo the desired vertex
@@ -372,7 +362,6 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
         @Override
         public String toString(){
             String str = "";
-
 
             if(state == EDGESTATE.RELAXED) str = ConsoleColors.ANSI_RED +" <-( "+weight+" )-> ";
             if(state == EDGESTATE.PATH) str = ConsoleColors.ANSI_GREEN +" <-( "+weight+" )-> ";
