@@ -1,6 +1,7 @@
 package Graph;
 
 import java.util.LinkedList;
+import java.util.Stack;
 
 /**
  * Graph Theory Directed Graphs that with the ability to have weighted edges
@@ -34,12 +35,8 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
      * @param data  The label and or data saved in the vertex to be deleted
      */
     public void removeVertex(T data){
-        for(Vertex<T> v : vertices){
-            v.removeEdge(data);
-            if(v.getData() == data) {
-                vertices.remove(v);
-            }
-        }
+        vertices.removeIf(v -> v.getData() == data);
+        for(Vertex<T> v : vertices) v.removeEdge(data);
     }
 
     /**
@@ -83,8 +80,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
             if(v.getData() == from) f = v;
             if(v.getData() == to) t = v;
             if(f != null && t != null) {
-                if(v.getEdge(to) != null) throw new IllegalArgumentException("The edge you are attempting to create already exists");
-                f.addEdge(t.getData(), weight);
+                Edge<T> temp = f.getEdge(to);
+                if(temp != null) throw new IllegalArgumentException("The edge you are attempting to create already exists");
+                f.addEdge(t, weight);
                 return true;
             }
         }
@@ -111,6 +109,7 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
         for(Vertex<T> v : vertices){
             if(v.getData() == from){
                 v.removeEdge(to);
+                return;
             }
         }
     }
@@ -132,6 +131,45 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
         for(Vertex<T> v : vertices){
             if(v.getData() == data) return v;
         }
+        return null;
+    }
+
+    /**
+     * Sorts the vertices topologically
+     * @return  a list of the sorted vertices
+     */
+    public LinkedList<Vertex<T>> getTopologicalOrder(){
+
+        Stack<Vertex<T>> processing = new Stack<>();    //emulates recursion
+        LinkedList<Vertex<T>> order = new LinkedList<>();   //return data structure
+
+        Vertex<T> cur;
+        processing.push(vertices.get(0));
+        vertices.get(0).setVisited(true);
+
+        for(Vertex<T> v : vertices) if (!v.getIsVisited()) {    //ensure that all vertices are included in the topological sort
+
+            while(!processing.isEmpty()) {
+                cur = processing.peek();
+                Vertex<T> temp = getNVEV(cur);  //finds neighbor to explore
+                if(temp == null) order.addFirst(processing.pop());  //when the vertex has no more neighbors to explore
+                else {  //found another neighbor to explore
+                    processing.push(temp);
+                    temp.setVisited(true);
+                }
+            }
+        }
+        for (Vertex<T> v : vertices) v.setVisited(false);   //resets the vertices to unvisited
+        return order;
+    }
+
+    /**
+     * Retrieves a not visited edge vertex
+     * @param v the vertex of the edge to find
+     * @return  null when all edge vertices have been visited
+     */
+    private Vertex<T> getNVEV(Vertex<T> v){
+        for(Edge<T> e : v.getEdgeList()) if (!e.getTo().getIsVisited()) return e.getTo();
         return null;
     }
 
@@ -170,8 +208,8 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
         private int distance;
         private boolean isVisited;
 
-        private Edge<T> shortestEdge;
-        private Vertex<T> shortestVertex;
+        private Edge<T> shortestEdge;   //remembers the path to get to this vertex
+        private Vertex<T> shortestVertex;   //remembers the vertex that came before it | this simplifies my task of getting the path
 
         /**
          * Creates a Vertex
@@ -180,7 +218,6 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
         public Vertex(T data) {
             this.data = data;
             edgeList = new LinkedList<>();
-            //weightList = new ArrayList<>();
             distance = Integer.MAX_VALUE;
             isVisited = false;
         }
@@ -203,20 +240,20 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
         /**
          * Creates an edge from this edge to the specified edge with a default weight of 1
-         * @param data  the data and or label for the specified edge
+         * @param to  the data and or label for the specified edge
          */
-        public void addEdge(T data) {
-            addEdge(data, 1);
+        public void addEdge(Vertex<T> to) {
+            addEdge(to, 1);
         }
 
         /**
          * Creates an edge from this edge to the specified edge with a desired weight
-         * @param data  the data and or label for the specified edge
+         * @param to  the data and or label for the specified edge
          * @param weight    the desired weight
          */
-        public void addEdge(T data, int weight) {
-            if (data == this.data) throw new IllegalArgumentException("You can not make an edge to yourself");
-            edgeList.addLast(new Edge<>(this.data, data, weight));
+        public void addEdge(Vertex<T> to, int weight) {
+            if (to == this) throw new IllegalArgumentException("You can not make an edge to yourself");
+            edgeList.addLast(new Edge<>(this, to, weight));
         }
 
         /**
@@ -225,13 +262,7 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
          * @return  true only when an edge was removed
          */
         public boolean removeEdge(T data) {
-            for(Edge<T> e : edgeList) {
-                if (e.getTo() == data) {
-                    edgeList.remove(e);
-                    return true;
-                }
-            }
-            return false;
+            return edgeList.removeIf(e -> e.getTo().getData() == data);
         }
 
         /**
@@ -258,7 +289,7 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
          * Retrieves the edge that got us here | only when an algorithm is used to find the shortest path
          * @return  the edge | can be null
          */
-        public Edge<T> getShortestFrom() {
+        public Edge<T> getShortestEdge() {
             return shortestEdge;
         }
 
@@ -277,7 +308,7 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
          */
         public void setWeight(T data, int weight) {
             for(Edge<T> e : edgeList) {
-                if (e.getTo() == data) {
+                if (e.getTo().getData() == data) {
                     e.setWeight(weight);
                     break;
                 }
@@ -324,7 +355,7 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
          * @return  the Edge when found | can be null
          */
         public Edge<T> getEdge(T to) {
-            for(Edge<T> e : edgeList) if (e.getTo() == to) return e;
+            for(Edge<T> e : edgeList) if (e.getTo().getData() == to) return e;
             return null;
         }
 
@@ -345,20 +376,11 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
      * @param <T>   the type for the edge
      */
     public static class Edge<T extends Comparable<T>> implements Comparable<Edge<T>> {
-        private final T from;
-        private final T to;
+        private final Vertex<T> from;
+        private final Vertex<T> to;
         private int weight;
 
         private EDGESTATE state;
-
-        /**
-         * Creates an edge with default weight of 1
-         * @param from  the data and or label of the desired vertex
-         * @param to    the data and or label of the desired vertex
-         */
-        public Edge(T from, T to){
-            this(from, to, 1);
-        }
 
         /**
          * Creates an Edge with specified weight
@@ -366,7 +388,7 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
          * @param to    the data and or label fo the desired vertex
          * @param weight    the desired weight for this edge
          */
-        public Edge(T from, T to, int weight){
+        public Edge(Vertex<T> from, Vertex<T> to, int weight){
             this.from = from;
             this.to = to;
             this.weight = weight;
@@ -374,18 +396,18 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
         }
 
         /**
-         * Retrieves the data and or label of the vertex it points from
-         * @return  the data and or label of the vertex it points form
+         * Retrieves the vertex it points from
+         * @return  the vertex it points form
          */
-        public T getFrom(){
+        public Vertex<T> getFrom(){
             return from;
         }
 
         /**
-         * Retrieves the data dna dor label of the vertex it points to
-         * @return  the data and or label of the vertex it points to
+         * Retrieves the vertex it points to
+         * @return  the vertex it points to
          */
-        public T getTo(){
+        public Vertex<T> getTo(){
             return to;
         }
 
@@ -405,6 +427,14 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
             this.weight = weight;
         }
 
+        public void setEdgeState(EDGESTATE state){
+            this.state = state;
+        }
+
+        public EDGESTATE getEdgeState(){
+            return state;
+        }
+
         @Override
         public int compareTo(Edge edge){
             return Integer.compare(weight, edge.getWeight());
@@ -412,11 +442,14 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
         @Override
         public String toString(){
-            if(state == EDGESTATE.PATH) return ConsoleColors.ANSI_GREEN +from +" -( "+weight+" )-> " + to+ConsoleColors.ANSI_RESET;
-            if(state == EDGESTATE.RELAXED) return ConsoleColors.ANSI_RED +from +" -( "+weight+" )-> " + to+ConsoleColors.ANSI_RESET;
-            if(state == EDGESTATE.EXPLORED) return ConsoleColors.ANSI_BLUE +from +" -( "+weight+" )-> " + to+ConsoleColors.ANSI_RESET;
-            if(state == EDGESTATE.UNEXPLORED) return ConsoleColors.ANSI_YELLOW +from +" -( "+weight+" )-> " + to+ConsoleColors.ANSI_RESET;
-            return "";
+            String str = "";
+
+            if(state == EDGESTATE.RELAXED) str = ConsoleColors.ANSI_RED +" -( "+weight+" )-> ";
+            if(state == EDGESTATE.PATH) str = ConsoleColors.ANSI_GREEN +" -( "+weight+" )-> ";
+            if(state == EDGESTATE.EXPLORED) str = ConsoleColors.ANSI_BLUE +" -( "+weight+" )-> ";
+            if(state == EDGESTATE.UNEXPLORED) str = ConsoleColors.ANSI_YELLOW +" -( "+weight+" )-> ";
+
+            return from + str + ConsoleColors.ANSI_RESET + to;
         }
 
     }
