@@ -17,7 +17,7 @@ import java.util.*;
  */
 public class Dijkstra <T extends Comparable<T>> {
 
-    private final PriorityQueue<Edge<T>> hold;    //ensure that the best edge is always the next to come off
+    private final PriorityQueue<Vertex<T>> hold;    //ensure that the closest vertex comes next
 
     UndirectedGraph<T> graph;
     LinkedList<Vertex<T>> vertices;
@@ -32,83 +32,97 @@ public class Dijkstra <T extends Comparable<T>> {
         }else throw new IllegalArgumentException("The graph must be Undirected");
     }
 
+    /**
+     * Runtime : O(E)
+     */
     private void ensureWeights(){   //ensures that no weights for the graph are under 1
         for (Edge<T> e : edges) if (e.getWeight() < 1) throw new IllegalStateException("There can be no weights below 1 for Dijkstra's Algorithm");
     }
 
-    private void shortestPath(T from) {
+    /**
+     * Solves for the shortest path using the dijkstra algorithm
+     *
+     * Runtime : O( (V+E) log(V) )
+     *
+     * @param from  the starting vertex
+     */
+    private void shortestPath(Vertex<T> from) {
         hold.clear();
         reset();
         ensureWeights();
 
-        Vertex<T> current = graph.getVertex(from);  //starting point for the algorithm
-        current.setDistance(0, null, null); //all the other vertices are infinite distance away, and our starting point is zero
-        addEdges(current);  //adds all the edges at this vertex to our priority que
+        from.setDistance(0, null, null); //all the other vertices are infinite distance away, and our starting point is zero
+        from.setVisited(true);
+        hold.add(from);
 
-        while (!hold.isEmpty()){    //until our que is empty
-            Edge<T> bestEdge = hold.poll(); //removes an edge from the que
-            //finds a vertex that as not been visited in the edge set
-            if(bestEdge.getA().getIsVisited()) current = bestEdge.getB();
-            else current = bestEdge.getA();
-            //adds all the edges of that vertex
-            addEdges(current);
-        }
+        Vertex<T> current;
+        Vertex<T> next;
+        //O(n) all vertex
+        while(!hold.isEmpty()){
+            current = hold.poll();
+            current.setVisited(true);
+            //O(m) all edges
+            for(Edge<T> e : edges) if (e.getA() == current || e.getB() == current){
 
-    }
+                if (e.getA() == current)  next = e.getB(); else next = e.getA();    //ensure the next vertex is not the one we were just looking at
 
-    private void addEdges(Vertex<T> v){
-        if(v.getIsVisited()) return;    //if this vertex has already been visited, move on
-        v.setVisited(true); //set this vertex to visited
+                if(e.getState() != EDGESTATE.UNEXPLORED) continue;  //we only are interested in edges we haven't seen
 
-        for(Edge<T> e : edges) if (e.getA() == v || e.getB() == v) {    //looks at all the edges and only operates on those that have the current vertex
+                e.setState(EDGESTATE.EXPLORED);
 
-            if(e.getState() == EDGESTATE.UNEXPLORED) {  //adds the edge to que only if we have not explored it yet
-                hold.add(e);
-                e.setState(EDGESTATE.EXPLORED); //sets it to explored, so we don't explore it again
-            }else continue;
-
-            Vertex<T> next;
-
-            //finds the vertex in this edge that is not the vertex we came from
-            if(v != e.getA()) next = e.getA();
-            else next = e.getB();
+                //current path is better than old
+                if(current.getDistance()+e.getWeight() < next.getDistance()){
+                    if(next.getShortestEdge() != null) next.getShortestEdge().setState(EDGESTATE.RELAXED);  //in the event that
+                    e.setState(EDGESTATE.PATH);
+                    next.setDistance(current.getDistance()+e.getWeight(), current, e);
+                }
+                else e.setState(EDGESTATE.RELAXED); //old path is better
 
 
-            if(next.getDistance() > v.getDistance() + e.getWeight()){   //when the current path to this next vertex is better
-                if(next.getShortestEdge() != null) next.getShortestEdge().setState(EDGESTATE.RELAXED);  //relax the old edge
-                e.setState(EDGESTATE.PATH); //makes the new edge a short distance edge
-                next.setDistance(v.getDistance() + e.getWeight(), v, e);    //since the new edge is discovered we know how far it is
+                //only adds next once if we haven't seen it
+                if (!next.getIsVisited()) hold.add(next);
+                next.setVisited(true);
             }
-            else e.setState(EDGESTATE.RELAXED);  //relaxes this edge and
 
         }
-
     }
 
+    /**
+     * Solves for the shortest path using the dijkstra algorithm
+     * @param from  starting vertex label
+     * @param to    ending vertex label
+     * @return  the path from to finish
+     */
     public LinkedList<Vertex<T>> shortestPath(T from, T to) {
-        shortestPath(from); //finds the distances of every vertex from the beginning vertex
+
+        Vertex<T> cur = graph.getVertex(to);
+        Vertex<T> start = graph.getVertex(from);
+
+        if(cur == null || start == null) return null;
+
+        shortestPath(start); //finds the distances of every vertex from the beginning vertex
         LinkedList<Vertex<T>> path = new LinkedList<>();
 
-        Vertex<T> current =  graph.getVertex(to);
-        path.add(current);
+        do{
+            path.addFirst(cur);
+            cur = cur.getShortestVertex();
+        }while(cur != null && cur.getShortestVertex() != start);
+        if (cur != null && cur.getShortestVertex() == start) path.addFirst(start);  //Resolves fence post issue
 
-        while(current != null){
-            path.addFirst(current.getShortestVertex());
-            current = current.getShortestVertex();
-        }
-        path.remove(0);
-
-        return (path.get(0).getData() == from) ? path : null;
+        return (path.getFirst() == start) ? path : null;    //only returns the path when one exists
     }
 
-    public String shortestPathCost(T from, T to){
+    public Integer shortestPathCost(T from, T to){
         LinkedList<Vertex<T>> path = shortestPath(from, to);
-        Vertex<T> f = path.getFirst();
-        Vertex<T> t = path.getLast();
-
-        return (t.getDistance() - f.getDistance() < Integer.MAX_VALUE) ? Integer.toString(t.getDistance()-f.getDistance()) : "INFINITY";
+        if(path == null) return null;
+        return path.getLast().getDistance();
     }
 
+    /**
+     * Resets the graph
+     *
+     * Runtime : O(n)
+     */
     public void reset(){
         for(Vertex<T> v : vertices) {
             v.setDistance(Integer.MAX_VALUE, null, null);

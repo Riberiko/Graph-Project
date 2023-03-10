@@ -1,82 +1,103 @@
 package Algorithms;
 
-import Graph.EDGESTATE;
-import Graph.GraphInterface;
 import Graph.DirectedGraph;
 import Graph.DirectedGraph.Edge;
 import Graph.DirectedGraph.Vertex;
+import Graph.EDGESTATE;
+import Graph.GraphInterface;
 
 import java.util.LinkedList;
-
-/**
- * Bellman-Ford Path Finding Algorithm
- * @author Riberiko Niyomwungere
- * @version 1.0
- * @param <T>
- */
 public class BellmanFord<T extends Comparable<T>> {
 
-    DirectedGraph<T> graph;
-    LinkedList<Vertex<T>> vertices;
+    private final LinkedList<Vertex<T>> vertices;
+    private final DirectedGraph<T> graph;
 
+    /**
+     * Bellman Ford algorithm implementation
+     * @param graph
+     */
     public BellmanFord(GraphInterface<T> graph){
-        if(graph.getClass() == DirectedGraph.class){
-            this.graph = (DirectedGraph<T>) graph;
-            vertices = this.graph.getVertices();
-        } else throw new IllegalArgumentException("The graph must be Directed");
+        if(graph.getClass() != DirectedGraph.class) throw new IllegalArgumentException("The graph must be Directed");
+        this.graph = (DirectedGraph<T>) graph;
+        vertices = this.graph.getVertices();
     }
 
 
+    /**
+     * Finds the shortest path from vertex start label to vertex end label
+     *
+     * Runtime : O(V + E)
+     *
+     * @param from
+     * @param to
+     * @return
+     */
     public LinkedList<Vertex<T>> shortestPath(T from, T to){
+
+        LinkedList<Vertex<T>> path = new LinkedList<>();
+        Vertex<T> cur = graph.getVertex(to);
+        Vertex<T> start = graph.getVertex(from);
+
+        if(cur == null || start == null) return null;
+
+        boolean isComplete = false;
         reset();
 
-        Vertex<T> f = graph.getVertex(from);
-        Vertex<T> t = graph.getVertex(to);
+        start.setDistance(0, null, null);
+        start.setVisited(true);
 
-        if(f == null || t == null) return null; //when the vertices do not exist
+        while(!isComplete) {
+            isComplete = true;
 
-        LinkedList<Vertex<T>> order = graph.getTopologicalOrder();  //gets the topological order
-        if(order.size() == 0) return null;  //when the graph is empty
-        order.get(0).setDistance(0, null, null);
-
-        for(Vertex<T> v : order){   //going in topological order
-            v.setVisited(true);
-            for(Edge<T> e : v.getEdgeList()){   //all the current vertices edges
-                e.setEdgeState(EDGESTATE.EXPLORED); //we have begun exporting them
-                if(e.getTo().getDistance() > v.getDistance() + e.getWeight()){  //the current path to this node is better than the previous
-                    if(e.getTo().getShortestEdge() != null) e.getTo().getShortestEdge().setEdgeState(EDGESTATE.RELAXED);    //when old edge exist set to relaxed
-                    e.getTo().setDistance(v.getDistance() + e.getWeight(), v, e);   //sets new distances for the current vertex at the end of this edge
-                    e.getTo().getShortestEdge().setEdgeState(EDGESTATE.PATH);   //flags this current edge as the best to get to this vertex so far
+            for (Vertex<T> v : vertices) if (v.getIsVisited()) {
+                for (Edge<T> e : v.getEdgeList()) if (e.getEdgeState() == EDGESTATE.UNEXPLORED) {   //for all edges of the current vertex
+                    Vertex<T> next = e.getTo(); //the edge it is pointing to
+                    e.setEdgeState(EDGESTATE.EXPLORED);
+                    if (next.getDistance() > v.getDistance() + e.getWeight()) {   //if new path is better
+                        if (next.getShortestEdge() != null)
+                            next.getShortestEdge().setEdgeState(EDGESTATE.RELAXED);  //old edge relaxed
+                        next.setDistance(v.getDistance() + e.getWeight(), v, e);    //saves current path
+                        next.getShortestEdge().setEdgeState(EDGESTATE.PATH);    //new path is set as the current best path
+                        isComplete = false; //a new loop will need to be done
+                        next.setVisited(true);
+                    } else if (next.getDistance() < v.getDistance() + e.getWeight())
+                        e.setEdgeState(EDGESTATE.RELAXED); //old path is better
                 }
-                else e.setEdgeState(EDGESTATE.RELAXED); //when the old vertex is better, this edge will relax
             }
         }
 
-        //Returns the path going from designation to beginning
-        LinkedList<Vertex<T>> path = new LinkedList<>();
-        Vertex<T> cur = t;
-
         do{
-            path.addFirst(cur);
-            cur = cur.getShortestVertex();
-            if(cur == null) return null;
-        }while(cur != f);
-        path.addFirst(f);
+           path.addFirst(cur);
+           cur = cur.getShortestVertex();   //back tracking to
+        }while(cur != start && cur != null);
+        if(cur != null) path.addFirst(cur);
 
-        return path;
+        return (path.getFirst() == start) ? path : null;    //returns the list only if it found the start vertex
     }
 
-    public Integer shortestPathCost(T from, T to){
-        LinkedList<Vertex<T>> path = shortestPath(from, to);
-        return path.getLast().getDistance() - path.getFirst().getDistance();
+    /**
+     * Solves for the cost of the graph path from start to finish
+     *
+     * Runtime O(V + E)
+     *
+     * @param start vertex start label
+     * @param end   vertex end label
+     * @return  path cost
+     */
+    public Integer shortestPathCost(T start, T end){
+        return (shortestPath(start, end) != null) ? graph.getVertex(end).getDistance() - graph.getVertex(start).getDistance()  : null;
     }
 
+    /**
+     * Runtime : O(V + E)
+     */
     public void reset(){
-        for(Vertex<T> v : vertices) {
+        for(Vertex<T> v : vertices){
+            for(Edge<T> e : v.getEdgeList()){
+                e.setEdgeState(EDGESTATE.UNEXPLORED);
+            }
             v.setDistance(Integer.MAX_VALUE, null, null);
             v.setVisited(false);
-            for (Edge<T> e : v.getEdgeList()) e.setEdgeState(EDGESTATE.UNEXPLORED);
         }
     }
-
 }

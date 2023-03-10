@@ -25,6 +25,9 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
 
     /**
      * Adds creates a vertex in the graph that can be identified using the data argument
+     *
+     * Runtime : O(V)
+     *
      * @param data  The label and or data saved in the vertex to be created
      */
     public void addVertex(T data){
@@ -34,15 +37,21 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
 
     /**
      * Removes the vertex in the graph with the data field of the argument passed in
+     *
+     * Runtime O(V + E)
+     *
      * @param data  The label and or data saved in the vertex to be deleted
      */
     public void removeVertex(T data){
         vertices.removeIf(v -> v.getData() == data);
-        edgeLinkedList.removeIf(e -> (e.getB() == data || e.getA() == data) );
+        edgeLinkedList.removeIf(e -> (e.getB().getData() == data || e.getA().getData() == data) );
     }
 
     /**
      * Sets the weight for the edge
+     *
+     * Runtime : O(E)
+     *
      * @param a  the start vertex data and or label
      * @param b    the end vertex data and or label
      * @param weight    the desired weight to be changed to
@@ -68,6 +77,9 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
 
     /**
      * Adds an edge with a specified weight
+     *
+     * Runtime : O(E)
+     *
      * @param a  the vertex
      * @param b the other vertex
      * @param weight    the desired weight
@@ -81,6 +93,9 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
 
     /**
      * Adds an edge with a weight of 1
+     *
+     * Runtime : O(V + E)
+     *
      * @param a the vertex data and or label
      * @param b the vertex data and or label
      * @return true when edge added to graph
@@ -91,6 +106,9 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
 
     /**
      * Adds an edge with a specified weight
+     *
+     * Runtime : O(V + E)
+     *
      * @param a the vertex data and or label
      * @param b the vertex data and or label
      * @param weight    of the edge
@@ -115,6 +133,9 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
 
     /**
      * Ensures that there is no existing vertex in the graph with that data and or label
+     *
+     * Runtime : O(V)
+     *
      * @param data  to look for
      */
     private void ensureUnique(T data){
@@ -125,6 +146,9 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
 
     /**
      * Checks to see if two vertices are already connected via edge
+     *
+     * Runtime : O(E)
+     *
      * @param a the data and or label of one vertex
      * @param b the data and or label of the second vertex
      * @return  true if that edge does not already exist
@@ -136,11 +160,14 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
 
     /**
      * Removes the edge from the graph
+     *
+     * Runtime : O(E)
+     *
      * @param a  the start vertex data and or label
      * @param b    the end vertex data and or label
      */
     public void removeEdge(T a, T b){
-        edgeLinkedList.removeIf(e -> ((e.getA() == a && e.getB() == b) || (e.getA() == b && e.getA() == a) ));
+        edgeLinkedList.removeIf(e -> ((e.getA().getData() == a && e.getB().getData() == b) || (e.getA().getData() == b && e.getA().getData() == a) ));
     }
 
     /**
@@ -161,6 +188,9 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
 
     /**
      * Retrieves the vertex in this graph that contains that data and or label
+     *
+     * Runtime : O(V)
+     *
      * @param data  to look for
      * @return  the vertex found, can be null
      */
@@ -285,7 +315,7 @@ public class UndirectedGraph<T extends Comparable<T>> implements GraphInterface<
 
         @Override
         public int compareTo(Vertex<T> v) {
-            return data.compareTo(v.getData());
+            return distance-v.getDistance();
         }
     }
 

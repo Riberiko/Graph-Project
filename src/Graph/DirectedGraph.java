@@ -32,6 +32,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
     /**
      * Removes the vertex in the graph with the data field of the argument passed in
+     *
+     * Runtime : O(V)
+     *
      * @param data  The label and or data saved in the vertex to be deleted
      */
     public void removeVertex(T data){
@@ -41,6 +44,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
     /**
      * Sets the weight for the edge
+     *
+     * Runtime : O(V)
+     *
      * @param from  the start vertex data and or label
      * @param to    the end vertex data and or label
      * @param weight    the desired weight to be changed to
@@ -56,6 +62,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
     /**
      * Creates an edge with a default weight of 1
+     *
+     * Runtime : O(V)
+     *
      * @param from  the vertex data and or label
      * @param to    the vertex data and or label
      * @return  true only when the vertex was successfully added
@@ -66,6 +75,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
     /**
      * Adds an edge with a specified weight
+     *
+     * Runtime : O(V)
+     *
      * @param from  the vertex data and or label
      * @param to    the vertex data and or label
      * @param weight    the desired weight
@@ -92,6 +104,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
     /**
      * Ensures that there is no existing vertex in the graph with that data and or label
+     *
+     * Runtime : O(V)
+     *
      * @param data  to look for
      */
     private void ensureUnique(T data){
@@ -102,6 +117,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
     /**
      * Removes the edge from the graph
+     *
+     * Runtime : O(V)
+     *
      * @param from  the start vertex data and or label
      * @param to    the end vertex data and or label
      */
@@ -124,6 +142,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
     /**
      * Retrieves the vertex in this graph that contains that data and or label
+     *
+     * Runtime : O(V)
+     *
      * @param data  to look for
      * @return  the vertex found, can be null
      */
@@ -136,6 +157,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
     /**
      * Sorts the vertices topologically
+     *
+     * Runtime : O(V + E)
+     *
      * @return  a list of the sorted vertices
      */
     public LinkedList<Vertex<T>> getTopologicalOrder(){
@@ -165,6 +189,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
     /**
      * Retrieves a not visited edge vertex
+     *
+     * Runtime : O(E)
+     *
      * @param v the vertex of the edge to find
      * @return  null when all edge vertices have been visited
      */
@@ -303,6 +330,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
         /**
          * Sets the weight for the edge from this vertex to the specified one
+         *
+         * Runtime : O(E)
+         *
          * @param data  the data and or label for the desired vertex
          * @param weight    the desired weight
          */
@@ -317,6 +347,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
         /**
          * Retrieves the weight of the edge form this vertex to the specified one
+         *
+         * Runtime : O(E)
+         *
          * @param data  the data and or label for the desired Vertex
          * @return  the weight of that edge | can be null when edge doesn't exist
          */
@@ -351,6 +384,9 @@ public class DirectedGraph<T extends Comparable<T>> implements GraphInterface<T>
 
         /**
          * Retrieves the edge from this vertex to the specified Vertex
+         *
+         * Runtime : O(E)
+         *
          * @param to    the data and or label of the specified Vertex
          * @return  the Edge when found | can be null
          */
